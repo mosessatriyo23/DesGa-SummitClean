@@ -4,80 +4,97 @@ using UnityEngine;
 [RequireComponent(typeof(Rigidbody2D))]
 public sealed class CharacterController : MonoBehaviour
 {
-  #region Constants
+    #region Constants
 
-  private static readonly int ANIM_WALKING = Animator.StringToHash("Walk");
-  private static readonly int ANIM_DIRECTION = Animator.StringToHash("Direction");
+    private static readonly int ANIM_WALKING = Animator.StringToHash("Walk");
+    private static readonly int ANIM_DIRECTION = Animator.StringToHash("Direction");
 
-  #endregion
+    #endregion
 
-  #region Inspector
+    #region Inspector
 
-  [Min(0.1f)]
-  [SerializeField]
-  private float speed = 1;
+    [Header("Movement Settings")]
+    [Min(0.1f)]
+    [SerializeField]
+    private float walkSpeed = 2f; // Kecepatan jalan santai
 
-  #endregion
+    [Min(0.1f)]
+    [SerializeField]
+    private float runSpeed = 5f; // Kecepatan lari (lebih cepat)
 
-  #region Fields
+    #endregion
 
-  private Animator _animator;
-  private Rigidbody2D _rigidbody;
+    #region Fields
 
-  #endregion
+    private Animator _animator;
+    private Rigidbody2D _rigidbody;
 
-  #region MonoBehaviour
+    #endregion
 
-  private void Awake()
-  {
-    _animator = GetComponent<Animator>();
-    _rigidbody = GetComponent<Rigidbody2D>();
-  }
+    #region MonoBehaviour
 
-  private void FixedUpdate()
-  {
-    int? direction = null;
-    Vector2 velocity = Vector2.zero;
-
-    if (Input.GetKey(KeyCode.UpArrow))
+    private void Awake()
     {
-      direction = 2;
-      velocity = new Vector2(0, 1);
-    }
-    else if (Input.GetKey(KeyCode.DownArrow))
-    {
-      direction = 0;
-      velocity = new Vector2(0, -1);
-    }
-    else if (Input.GetKey(KeyCode.RightArrow))
-    {
-      direction = 1;
-      velocity = new Vector2(1, 0);
-    }
-    else if (Input.GetKey(KeyCode.LeftArrow))
-    {
-      direction = 3;
-      velocity = new Vector2(-1, 0);
+        _animator = GetComponent<Animator>();
+        _rigidbody = GetComponent<Rigidbody2D>();
     }
 
-    _rigidbody.velocity = velocity * speed;
-    _animator.SetBool(ANIM_WALKING, direction.HasValue);
+    private void FixedUpdate()
+    {
+        int? direction = null;
+        Vector2 inputVector = Vector2.zero;
 
-    if (direction.HasValue)
-      _animator.SetInteger(ANIM_DIRECTION, direction.Value);
-  }
+        // 1. Deteksi Input Arah
+        if (Input.GetKey(KeyCode.UpArrow))
+        {
+            direction = 2;
+            inputVector = new Vector2(0, 1);
+        }
+        else if (Input.GetKey(KeyCode.DownArrow))
+        {
+            direction = 0;
+            inputVector = new Vector2(0, -1);
+        }
+        else if (Input.GetKey(KeyCode.RightArrow))
+        {
+            direction = 1;
+            inputVector = new Vector2(1, 0);
+        }
+        else if (Input.GetKey(KeyCode.LeftArrow))
+        {
+            direction = 3;
+            inputVector = new Vector2(-1, 0);
+        }
 
-  private void OnTriggerEnter2D(Collider2D collision)
-  {
-      Trash trash = collision.GetComponent<Trash>();
+        // 2. Logika Lari (Shift + Stamina > 0)
+        // Cek apakah tombol Shift ditekan DAN Stamina masih ada
+        bool isRunning = Input.GetKey(KeyCode.LeftShift) && StaminaManager.instance.currentStamina > 0;
 
-      if (trash != null && !trash.collected)
-      {
-          trash.collected = true;
-          TrashManager.instance.AddTrash();
-          Destroy(collision.gameObject);
-      }
-  }
+        // 3. Tentukan Kecepatan Akhir
+        // Jika sedang lari pakai runSpeed, jika tidak pakai walkSpeed
+        float currentSpeed = isRunning ? runSpeed : walkSpeed;
 
-  #endregion
+        // 4. Gerakkan Karakter
+        _rigidbody.velocity = inputVector * currentSpeed;
+
+        // 5. Update Animasi
+        _animator.SetBool(ANIM_WALKING, direction.HasValue);
+
+        if (direction.HasValue)
+            _animator.SetInteger(ANIM_DIRECTION, direction.Value);
+    }
+
+    private void OnTriggerEnter2D(Collider2D collision)
+    {
+        Trash trash = collision.GetComponent<Trash>();
+
+        if (trash != null && !trash.collected)
+        {
+            trash.collected = true;
+            TrashManager.instance.AddTrash();
+            Destroy(collision.gameObject);
+        }
+    }
+
+    #endregion
 }
