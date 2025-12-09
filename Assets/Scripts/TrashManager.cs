@@ -19,6 +19,11 @@ public class TrashManager : MonoBehaviour
                   (new System.Diagnostics.StackTrace()).GetFrame(1).GetMethod().Name);
 
         TrashBarController.instance.UpdateBar(collectedTrash, requiredTrash);
+
+        if (collectedTrash >= requiredTrash)
+        {
+            FindObjectOfType<TestScripts>().ShowLevelComplete();
+        }
     }
 
     private void Start()
