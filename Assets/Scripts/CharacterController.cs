@@ -16,11 +16,11 @@ public sealed class CharacterController : MonoBehaviour
     [Header("Movement Settings")]
     [Min(0.1f)]
     [SerializeField]
-    private float walkSpeed = 2f; // Kecepatan jalan santai
+    private float walkSpeed = 2f;
 
     [Min(0.1f)]
     [SerializeField]
-    private float runSpeed = 5f; // Kecepatan lari (lebih cepat)
+    private float runSpeed = 5f;
 
     #endregion
 
@@ -66,18 +66,12 @@ public sealed class CharacterController : MonoBehaviour
             inputVector = new Vector2(-1, 0);
         }
 
-        // 2. Logika Lari (Shift + Stamina > 0)
-        // Cek apakah tombol Shift ditekan DAN Stamina masih ada
         bool isRunning = Input.GetKey(KeyCode.LeftShift) && StaminaManager.instance.currentStamina > 0;
 
-        // 3. Tentukan Kecepatan Akhir
-        // Jika sedang lari pakai runSpeed, jika tidak pakai walkSpeed
         float currentSpeed = isRunning ? runSpeed : walkSpeed;
 
-        // 4. Gerakkan Karakter
         _rigidbody.velocity = inputVector * currentSpeed;
 
-        // 5. Update Animasi
         _animator.SetBool(ANIM_WALKING, direction.HasValue);
 
         if (direction.HasValue)
